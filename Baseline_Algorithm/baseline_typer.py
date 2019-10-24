@@ -1,10 +1,8 @@
 import os
 import re
 
-variables = {}
-types = []
 
-def evaluate_context(phrase, var_name):
+def evaluate_context(phrase, var_name, variables):
     other_var_match = r'^[a-z, A-Z, \-, \_]+'
     type_matches = {
         '$number$': r'^\(*[0-9]+\)*;?',
@@ -27,8 +25,11 @@ def evaluate_context(phrase, var_name):
             pred = '$any$'
     return pred
 
+
 def typer(tokens):
     # Read in tokens
+    variables = {}
+    types = []
     for i in range(len(tokens)):
         if tokens[i] != '=' or i <= 0 or i >= len(tokens)-1:
             if variables.get(tokens[i]):
@@ -38,13 +39,14 @@ def typer(tokens):
             continue
         var_name, phrase = tokens[i-1], tokens[i+1]
 
-        type_pred = evaluate_context(phrase, var_name)
+        type_pred = evaluate_context(phrase, var_name, variables)
         if type_pred == "$list$" and i+2 < len(tokens):
-            type_pred = evaluate_context(tokens[i+2], var_name)[:-1] + "[]$"
+            type_pred = evaluate_context(tokens[i+2], var_name, variables)[:-1] + "[]$"
         variables[var_name] = type_pred
         types[-1] = variables[var_name]
         types.append('O')
     return types
+
 
 if __name__ == "__main__":
     dir = os.getcwd()
@@ -58,7 +60,7 @@ if __name__ == "__main__":
         tokens = file['tokens']
         types  = file['types']
         types_pred = typer(tokens)
-        correct = [pred for type, pred in zip(types, types_pred) if type == pred and type != 'O']
-        accuracies.append(len(correct) / len([t for t in types if t != ""]))
-        print(f'{len(correct)}/{len([t for t in types if t != ""])} types correctly annotated, excluding non-types')
+        correct = [pred for target, pred in zip(types, types_pred) if target == pred and target != 'O']
+        accuracies.append(len(correct) / len([t for t in types if t != "O"]))
+        print(f'{len(correct)}/{len([t for t in types if t != "O"])} types correctly annotated, excluding non-types')
     print(f"Average accuracy: {sum(accuracies)/len(accuracies)}")
