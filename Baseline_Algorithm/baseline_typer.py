@@ -70,6 +70,16 @@ def baseline_accuracy(token_file):
     return file_correct, file_tested, file_accuracies
 
 
+def dataset_stats(directory):
+    repos = os.listdir(directory)
+    total_files = 0
+    for repo in repos:
+        with open(f'{directory}/{repo}') as f:
+            total_files += len(list(f))
+    print(f'Total repos: {len(repos)}')
+    print(f'Total files: {total_files}')
+
+
 def test_repos(directory):
     """ Calculate and print accuracies for all .json files in the provided directory """
     total_correct = 0
@@ -88,4 +98,4 @@ def test_repos(directory):
 
 
 if __name__ == "__main__":
-    test_repos('outputs-all')
+    dataset_stats('outputs-all')
