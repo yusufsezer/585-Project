@@ -48,19 +48,44 @@ def typer(tokens):
     return types
 
 
-if __name__ == "__main__":
-    dir = os.getcwd()
-
-    with open("500tech__angular-tree-component.json") as f:
+def baseline_accuracy(token_file):
+    """ Operates on a single .json file of tokens and types """
+    with open(token_file) as f:
         tokens_and_types = [line.split('\t') for line in f.readlines()]
         data = [{"tokens": tokens.split(' '), "types": types.split(' ')} for tokens, types in tokens_and_types]
 
-    accuracies = []
+    file_accuracies = []
+    file_correct = 0
+    file_tested = 0
     for i, file in enumerate(data):
         tokens = file['tokens']
         types  = file['types']
         types_pred = typer(tokens)
-        correct = [pred for target, pred in zip(types, types_pred) if target == pred and target != 'O']
-        accuracies.append(len(correct) / len([t for t in types if t != "O"]))
-        print(f'{len(correct)}/{len([t for t in types if t != "O"])} types correctly annotated, excluding non-types')
-    print(f"Average accuracy: {sum(accuracies)/len(accuracies)}")
+        num_correct = len([pred for target, pred in zip(types, types_pred) if target == pred and target != 'O'])
+        num_tested = len([t for t in types if t != "O"])
+        if num_tested > 0:
+            file_accuracies.append(num_correct / num_tested)
+        file_correct += num_correct
+        file_tested += num_tested
+    return file_correct, file_tested, file_accuracies
+
+
+def test_repos(directory):
+    """ Calculate and print accuracies for all .json files in the provided directory """
+    total_correct = 0
+    total_tested = 0
+    files = os.listdir(directory)
+    repo_accuracies = []
+    for f in files:
+        file_correct, file_tested, file_accuracies = baseline_accuracy(f'{directory}/{f}')
+        total_correct += file_correct
+        total_tested += file_tested
+        if total_tested > 0:
+            repo_accuracies.append(total_correct / total_tested)
+        print(f'{f}: {total_correct}/{total_tested}')
+    print(f'Total: {100 * total_correct / total_tested :.2f}%')
+    print(f'Average: {100 * sum(repo_accuracies) / len(repo_accuracies):.2f}%')
+
+
+if __name__ == "__main__":
+    test_repos('outputs-all')
