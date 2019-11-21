@@ -98,4 +98,4 @@ def test_repos(directory):
 
 
 if __name__ == "__main__":
-    dataset_stats('outputs-all')
+    dataset_stats('../outputs-all')
