@@ -13,7 +13,7 @@ def pass_through_symbols(toks_and_tags):
     """Replace some of the 'O' tags taking into account Javascript syntax"""
     df = pd.DataFrame(toks_and_tags).T
     df.columns = ['toks', 'tags']
-    df[df.toks.isin(list('{}()'))]['tags'] = df['toks']
+    df.loc[df.toks.isin(list('{}(),=') + ['function', 'var', 'let', 'const']), 'tags'] = df['toks']
     return df.values.T
 
 
@@ -64,8 +64,8 @@ def data_to_ner_df(data):
 if __name__ == '__main__':
     data_dir = '../outputs-all'
     test_repo = f'{data_dir}/0xProject__0x.js.json'
-    # data = parse_all_repo_files(data_dir)
-    # df = data_to_ner_df(data)
-    # ffinv = lambda s: s.mask(s == s.shift())
-    # df['Sentence #'] = ffinv(df['Sentence #'])
-    # df.to_csv('types_dataset_plus_utf8.csv', index=False)
+    data = parse_all_repo_files(data_dir)
+    df = data_to_ner_df(data)
+    ffinv = lambda s: s.mask(s == s.shift())
+    df['Sentence #'] = ffinv(df['Sentence #'])
+    df.to_csv('types_dataset_plus_utf8.csv', index=False)
