@@ -43,7 +43,7 @@ def parse_repo_file(json_path):
         out = []
         for i, line in enumerate(file):
             print(f'[{(i + 1) / num_files * 100:.0f}] Processing {json_path}\r', end='')
-            out.append(pass_through_symbols(tuple(chunk.split() for chunk in line.split('\t'))))
+            out.append(tuple(chunk.split() for chunk in line.split('\t')))
         print()
         return out
 
@@ -59,13 +59,13 @@ def data_to_ner_df(data):
     df_data = ((f'Sentence: {i}', word, None, tag) for i, file in enumerate(data) for word, tag in zip(*file))
     df_headers = ['Sentence #', 'Word', 'POS', 'Tag']
     df = pd.DataFrame(data=df_data, columns=df_headers)
+    ffinv = lambda s: s.mask(s == s.shift())
+    df['Sentence #'] = ffinv(df['Sentence #'])
     return df
 
 if __name__ == '__main__':
-    data_dir = '../outputs-all'
+    data_dir = '../outputs-gold'
     test_repo = f'{data_dir}/0xProject__0x.js.json'
     data = parse_all_repo_files(data_dir)
     df = data_to_ner_df(data)
-    ffinv = lambda s: s.mask(s == s.shift())
-    df['Sentence #'] = ffinv(df['Sentence #'])
-    df.to_csv('types_dataset_plus_utf8.csv', index=False)
+    df.to_csv('types_dataset_gold_utf8.csv', index=False)
